@@ -1,0 +1,36 @@
+{
+  "name": "git-haiku-bot",
+  "version": "1.0.0",
+  "description": "https://twitter.com/GitHaiku",
+  "main": "git-haiku-bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcongdon/git-haiku-bot.git"
+  },
+  "keywords": [
+    "git",
+    "github",
+    "haiku",
+    "twitter",
+    "twitter-bot"
+  ],
+  "author": "Ben Congdon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bcongdon/git-haiku-bot/issues"
+  },
+  "homepage": "https://github.com/bcongdon/git-haiku-bot#readme",
+  "dependencies": {
+    "bot-utilities": "^2.5.0",
+    "commander": "^2.9.0",
+    "dotenv": "^4.0.0",
+    "github": "^9.2.0",
+    "lodash": "^4.17.4",
+    "sentence-tokenizer": "0.0.7",
+    "syllable": "^2.0.0",
+    "twit": "^2.2.5"
+  }
+}
