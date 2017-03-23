@@ -36,45 +36,59 @@ function filterCommonGitisms(word) {
 }
 
 function generateHaiku(cb) {
-  getCommits('blaze', 'odo', function(messages) {
-    var messages = _.flatten(messages.map(function(m) {
-      return m.split(/[\,\*\;\n\!\.]+/);
-    }));
-    messages = messages.map(function(m) {
-      var words = m.split(' ');
-      var new_message = '';
-      var syllables = 0;
-      for(var i = 0; i < words.length; i++) {
-        var w = words[i];
-        if(w.length == 0 || filterCommonGitisms(w))
-          continue;
-        if(syllable(w) + syllables > 7)
-          break;
-        new_message += (i == 0 ? '' : ' ') + w;
-        syllables += syllable(w);
-        if(syllables == 5 || syllables == 7)
-          return new_message;
-      }
-    }).filter(function(m) {
-      return Boolean(m);
-    }).map(function(m) {
-      return m.trim();
-    });
-    var fives = messages.filter(function(m) {
-      return syllable(m) == 5;
-    });
-    var sevens = messages.filter(function(m) {
-      return syllable(m) == 7;
-    });
+  getRandomPopularRepo(function(owner, repo) {
+    getCommits(owner, repo, function(messages) {
+      var messages = _.flatten(messages.map(function(m) {
+        return m.split(/[\,\*\;\n\!\.]+/);
+      }));
+      messages = messages.map(function(m) {
+        var words = m.split(' ');
+        var new_message = '';
+        var syllables = 0;
+        for(var i = 0; i < words.length; i++) {
+          var w = words[i];
+          if(w.length == 0 || filterCommonGitisms(w))
+            continue;
+          if(syllable(w) + syllables > 7)
+            break;
+          new_message += (i == 0 ? '' : ' ') + w;
+          syllables += syllable(w);
+          if(syllables == 5 || syllables == 7)
+            return new_message;
+        }
+      }).filter(function(m) {
+        return Boolean(m);
+      }).map(function(m) {
+        return m.trim();
+      });
+      var fives = messages.filter(function(m) {
+        return syllable(m) == 5;
+      });
+      var sevens = messages.filter(function(m) {
+        return syllable(m) == 7;
+      });
 
-    fives = _.shuffle(fives);
-    sevens = _.shuffle(sevens);
+      fives = _.shuffle(fives);
+      sevens = _.shuffle(sevens);
 
-    var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
-      return l[0].toUpperCase() + l.slice(1);
+      var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
+        return l[0].toUpperCase() + l.slice(1);
+      });
+
+      cb(lines.join('\n') + `\n\nvia ${owner}/${repo}`);
     });
+  });
+}
 
-    cb(lines.join('\n'));
+function getRandomPopularRepo(cb) {
+  github.search.repos({
+    q: 'size:>=30000 stars:>=5000',
+    sort: 'stars',
+    per_page: 100
+  }, function(err, res) {
+    var repos = res.data.items;
+    var random_repo = _.shuffle(repos)[0];
+    cb(random_repo.owner.login, random_repo.name);
   });
 }
 
