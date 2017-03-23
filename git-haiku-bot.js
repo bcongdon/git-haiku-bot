@@ -70,7 +70,11 @@ function generateHaiku(cb) {
     fives = _.shuffle(fives);
     sevens = _.shuffle(sevens);
 
-    cb(`${fives[0]}\n${sevens[0]}\n${fives[1]}`);
+    var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
+      return l[0].toUpperCase() + l.slice(1);
+    });
+
+    cb(lines.join('\n'));
   });
 }
 
