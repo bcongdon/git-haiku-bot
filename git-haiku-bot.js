@@ -92,6 +92,21 @@ function getRandomPopularRepo(cb) {
   });
 }
 
+function postHaiku(cb) {
+  generateHaiku(function(haiku) {
+    var T = new Twit(botUtilities.getTwitterAuthFromEnv());
+    T.post('statuses/update', { status: haiku }, function(err, data, response) {
+      if(err){
+        console.log(err);
+      }
+      else{
+        console.log(`Tweeted new haiku (${data.id}):\n ${haiku}`);
+      }
+    });
+    cb();
+  });
+}
+
 program
   .command('generate')
   .description('Generates a haiku')
@@ -103,17 +118,13 @@ program
   .command('post')
   .description('Posts a git haiku')
   .action(function() {
-    generateHaiku(function(haiku) {
-      var T = new Twit(botUtilities.getTwitterAuthFromEnv());
-      T.post('statuses/update', { status: haiku }, function(err, data, response) {
-        if(err){
-          console.log(err);
-        }
-        else{
-          console.log(`Tweeted new haiku (${data.id}:\n ${haiku})`);
-        }
-      });
-    });
+    postHaiku();
   });
 
 program.parse(process.argv);
+
+exports.handler = function(event, context) {
+  postHaiku(function() {
+    context.done();
+  });
+}

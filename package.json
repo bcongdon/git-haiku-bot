@@ -4,7 +4,8 @@
   "description": "https://twitter.com/GitHaiku",
   "main": "git-haiku-bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "package": "node_modules/node-lambda/bin/node-lambda package -H git-haiku-bot.hanlder -f .env -A ./build"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
     "dotenv": "^4.0.0",
     "github": "^9.2.0",
     "lodash": "^4.17.4",
+    "node-lambda": "^0.8.13",
     "sentence-tokenizer": "0.0.7",
     "syllable": "^2.0.0",
     "twit": "^2.2.5"
