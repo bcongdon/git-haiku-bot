@@ -4,7 +4,7 @@
 const program = require('commander');
 const botUtilities = require('bot-utilities');
 const Twit = require('twit');
-const syllable = require('syllable');
+const rhyme = require('rhyme');
 require('dotenv').config();
 var GitHubApi = require("github");
 var _ = require('lodash');
@@ -35,47 +35,55 @@ function filterCommonGitisms(word) {
           !isNaN(parseInt(word)))
 }
 
+function sentenceSyllables(r, str) {
+  return str.split(' ').reduce(function(acc, w) {
+    return acc + r.syllables(w);
+  }, 0);
+}
+
 function generateHaiku(cb) {
   getRandomPopularRepo(function(owner, repo) {
     getCommits(owner, repo, function(messages) {
       var messages = _.flatten(messages.map(function(m) {
         return m.split(/[\,\*\;\n\!\.]+/);
       }));
-      messages = messages.map(function(m) {
-        var words = m.split(' ');
-        var message_words = [];
-        var syllables = 0;
-        for(var i = 0; i < words.length; i++) {
-          var w = words[i];
-          if(w.length == 0 || syllable(w) == 0 || filterCommonGitisms(w))
-            continue;
-          if(syllable(w) + syllables > 7)
-            break;
-          message_words.push(w);
-          syllables += syllable(w);
-          if(syllables == 5 || syllables == 7)
-            return message_words.join(' ');
-        }
-      }).filter(function(m) {
-        return Boolean(m);
-      }).map(function(m) {
-        return m.trim();
-      });
-      var fives = messages.filter(function(m) {
-        return syllable(m) == 5;
-      });
-      var sevens = messages.filter(function(m) {
-        return syllable(m) == 7;
-      });
+      rhyme(function(r) {
+        messages = messages.map(function(m) {
+          var words = m.split(' ');
+          var message_words = [];
+          var syllables = 0;
+          for(var i = 0; i < words.length; i++) {
+            var w = words[i];
+            if(w.length == 0 || !r.syllables(w) || filterCommonGitisms(w))
+              continue;
+            if(r.syllables(w) + syllables > 7)
+              break;
+            message_words.push(w);
+            syllables += r.syllables(w);
+            if(syllables == 5 || syllables == 7)
+              return message_words.join(' ');
+          }
+        }).filter(function(m) {
+          return Boolean(m);
+        }).map(function(m) {
+          return m.trim();
+        });
+        var fives = messages.filter(function(m) {
+          return sentenceSyllables(r, m) == 5;
+        });
+        var sevens = messages.filter(function(m) {
+          return sentenceSyllables(r, m) == 7;
+        });
 
-      fives = _.shuffle(fives);
-      sevens = _.shuffle(sevens);
+        fives = _.shuffle(fives);
+        sevens = _.shuffle(sevens);
 
-      var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
-        return l[0].toUpperCase() + l.slice(1);
+        var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
+          return l[0].toUpperCase() + l.slice(1);
+        });
+
+        cb(lines.join('\n') + `\n\nvia ${owner}/${repo}`);
       });
-
-      cb(lines.join('\n') + `\n\nvia ${owner}/${repo}`);
     });
   });
 }
