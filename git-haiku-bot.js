@@ -29,21 +29,24 @@ function getCommits(owner, repo, cb) {
   });
 }
 
-function generate(cb) {
+function filterCommonGitisms(word) {
+  return (word.length == 0 || word[0] == '#' || word[0] == '(' ||
+          word[word.length - 1] == ':' || word[word.length - 1] == ')' ||
+          !isNaN(parseInt(word)))
+}
+
+function generateHaiku(cb) {
   getCommits('blaze', 'odo', function(messages) {
     var messages = _.flatten(messages.map(function(m) {
       return m.split(/[\,\*\;\n\!\.]+/);
     }));
     messages = messages.map(function(m) {
-      if(syllable(m) == 5 || syllable(m) == 7) {
-        return m;
-      }
       var words = m.split(' ');
       var new_message = '';
       var syllables = 0;
       for(var i = 0; i < words.length; i++) {
         var w = words[i];
-        if(w.length == 0)
+        if(w.length == 0 || filterCommonGitisms(w))
           continue;
         if(syllable(w) + syllables > 7)
           break;
@@ -75,15 +78,24 @@ program
   .command('generate')
   .description('Generates a haiku')
   .action(function() {
-    generate(console.log);
+    generateHaiku(console.log);
   });
 
 program
   .command('post')
   .description('Posts a git haiku')
   .action(function() {
-    var T = new Twit(botUtilities.getTwitterAuthFromEnv());
-
+    generateHaiku(function(haiku) {
+      var T = new Twit(botUtilities.getTwitterAuthFromEnv());
+      T.post('statuses/update', { status: haiku }, function(err, data, response) {
+        if(err){
+          console.log(err);
+        }
+        else{
+          console.log(`Tweeted new haiku (${data.id}:\n ${haiku}`);
+        }
+      });
+    });
   });
 
 program.parse(process.argv);
