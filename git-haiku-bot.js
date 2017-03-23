@@ -43,18 +43,18 @@ function generateHaiku(cb) {
       }));
       messages = messages.map(function(m) {
         var words = m.split(' ');
-        var new_message = '';
+        var message_words = [];
         var syllables = 0;
         for(var i = 0; i < words.length; i++) {
           var w = words[i];
-          if(w.length == 0 || filterCommonGitisms(w))
+          if(w.length == 0 || syllable(w) == 0 || filterCommonGitisms(w))
             continue;
           if(syllable(w) + syllables > 7)
             break;
-          new_message += (i == 0 ? '' : ' ') + w;
+          message_words.push(w);
           syllables += syllable(w);
           if(syllables == 5 || syllables == 7)
-            return new_message;
+            return message_words.join(' ');
         }
       }).filter(function(m) {
         return Boolean(m);
@@ -110,7 +110,7 @@ program
           console.log(err);
         }
         else{
-          console.log(`Tweeted new haiku (${data.id}:\n ${haiku}`);
+          console.log(`Tweeted new haiku (${data.id}:\n ${haiku})`);
         }
       });
     });
