@@ -35,10 +35,14 @@ function filterCommonGitisms(word) {
           !isNaN(parseInt(word)))
 }
 
-function sentenceSyllables(r, str) {
-  return str.split(' ').reduce(function(acc, w) {
-    return acc + r.syllables(w);
-  }, 0);
+var memoize = {};
+
+function wordSyllables(r, str) {
+  if(str in memoize)
+    return memoize[str];
+  var res = r.syllables(str);
+  memoize[str] = res;
+  return res;
 }
 
 function generateHaiku(cb) {
@@ -54,31 +58,35 @@ function generateHaiku(cb) {
           var syllables = 0;
           for(var i = 0; i < words.length; i++) {
             var w = words[i];
-            if(w.length == 0 || !r.syllables(w) || filterCommonGitisms(w))
+            var num_syllables = wordSyllables(r, w);
+            if(w.length == 0 || !num_syllables || filterCommonGitisms(w))
               continue;
-            if(r.syllables(w) + syllables > 7)
+            if(num_syllables + syllables > 7)
               break;
             message_words.push(w);
-            syllables += r.syllables(w);
+            syllables += num_syllables;
             if(syllables == 5 || syllables == 7)
-              return message_words.join(' ');
+              return { 
+                message: message_words.join(' ').trim(),
+                syllables: syllables
+              };
           }
         }).filter(function(m) {
           return Boolean(m);
-        }).map(function(m) {
-          return m.trim();
         });
+
         var fives = messages.filter(function(m) {
-          return sentenceSyllables(r, m) == 5;
+          return m.syllables == 5;
         });
         var sevens = messages.filter(function(m) {
-          return sentenceSyllables(r, m) == 7;
+          return m.syllables == 7;
         });
 
         fives = _.shuffle(fives);
         sevens = _.shuffle(sevens);
 
-        var lines = [fives[0], sevens[0], fives[1]].map(function(l) {
+        var lines = [fives[0], sevens[0], fives[1]].map(function(m) {
+          var l = m.message;
           return l[0].toUpperCase() + l.slice(1);
         });
 
@@ -110,8 +118,11 @@ function postHaiku(cb) {
       else{
         console.log(`Tweeted new haiku (${data.id}):\n ${haiku}`);
       }
+      cb({
+        message: haiku,
+        id: data.id
+      });
     });
-    cb();
   });
 }
 
@@ -132,7 +143,7 @@ program
 program.parse(process.argv);
 
 exports.handler = function(event, context) {
-  postHaiku(function() {
-    context.done();
+  postHaiku(function(res) {
+    context.succeed(res);
   });
 }
