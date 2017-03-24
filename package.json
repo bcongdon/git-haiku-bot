@@ -5,7 +5,7 @@
   "main": "git-haiku-bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "node_modules/node-lambda/bin/node-lambda package -H git-haiku-bot.hanlder -f .env -A ./build"
+    "package": "node_modules/node-lambda/bin/node-lambda package -H git-haiku-bot.handler -f .env -A ./build"
   },
   "repository": {
     "type": "git",

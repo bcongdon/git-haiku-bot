@@ -1,18 +1,16 @@
 #!/usr/bin/env node
 'use strict';
 
-const program = require('commander');
 const botUtilities = require('bot-utilities');
-const Twit = require('twit');
+const program = require('commander');
 const rhyme = require('rhyme');
+const Twit = require('twit');
 require('dotenv').config();
-var GitHubApi = require("github");
 var _ = require('lodash');
+var GitHubApi = require("github");
 
 _.mixin(botUtilities.lodashMixins);
 _.mixin(Twit.prototype, botUtilities.twitMixins);
-
-const SCREEN_NAME = process.env.SCREEN_NAME || 'GitHaiku';
 
 var github = new GitHubApi();
 
@@ -99,7 +97,7 @@ function generateHaiku(cb) {
 function getRandomPopularRepo(cb) {
   github.search.repos({
     q: 'size:>=30000 stars:>=5000',
-    sort: 'stars',
+    sort: 'updated',
     per_page: 100
   }, function(err, res) {
     var repos = res.data.items;
