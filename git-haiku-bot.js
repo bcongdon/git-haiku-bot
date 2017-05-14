@@ -18,6 +18,7 @@ function getCommits(owner, repo, cb) {
   github.repos.getCommits({
     owner: owner,
     repo: repo,
+    per_page: 100
   }, function(err, res) {
     var messages = res.data.map(function(commit) {
       return commit.commit.message;
@@ -29,8 +30,8 @@ function getCommits(owner, repo, cb) {
 
 function filterCommonGitisms(word) {
   return (word.length == 0 || word[0] == '#' || word[0] == '(' ||
-          word[word.length - 1] == ':' || word[word.length - 1] == ')' ||
-          !isNaN(parseInt(word)))
+    word[word.length - 1] == ':' || word[word.length - 1] == ')' ||
+    !isNaN(parseInt(word)))
 }
 
 var memoize = {};
@@ -57,20 +58,23 @@ function generateHaiku(cb) {
           for(var i = 0; i < words.length; i++) {
             var w = words[i];
             var num_syllables = wordSyllables(r, w);
-            if(w.length == 0 || !num_syllables || filterCommonGitisms(w))
+            if(w.length == 0)
               continue;
+            else if(filterCommonGitisms(w) || !num_syllables)
+              return;
             if(num_syllables + syllables > 7)
-              break;
+              return;
             message_words.push(w);
             syllables += num_syllables;
-            if(syllables == 5 || syllables == 7)
-              return { 
-                message: message_words.join(' ').trim(),
-                syllables: syllables
-              };
+          }
+          if(syllables == 5 || syllables == 7) {
+            return { 
+              message: message_words.join(' ').trim(),
+              syllables: syllables
+            };
           }
         }).filter(function(m) {
-          return Boolean(m);
+          return m && m.message != 'Merge pull request from';
         });
 
         var fives = messages.filter(function(m) {
@@ -80,8 +84,13 @@ function generateHaiku(cb) {
           return m.syllables == 7;
         });
 
-        fives = _.shuffle(fives);
-        sevens = _.shuffle(sevens);
+        fives = _.chain(fives).uniq().shuffle().value();
+        sevens = _.chain(sevens).uniq().shuffle().value();
+
+        if(fives.length < 2 || sevens.length < 1) {
+          cb(null);
+          return;
+        }
 
         var lines = [fives[0], sevens[0], fives[1]].map(function(m) {
           var l = m.message;
@@ -108,6 +117,7 @@ function getRandomPopularRepo(cb) {
 
 function postHaiku(cb) {
   generateHaiku(function(haiku) {
+    if(!haiku) return;
     var T = new Twit(botUtilities.getTwitterAuthFromEnv());
     T.post('statuses/update', { status: haiku }, function(err, data, response) {
       if(err){
