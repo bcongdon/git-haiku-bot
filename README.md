@@ -1,4 +1,6 @@
 # git-haiku-bot
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/bcongdon/git-haiku-bot.svg)](https://greenkeeper.io/)
 > ☯️  Git Commit Haikus in Tweet form
 
 See it in action: https://twitter.com/GitHaiku
