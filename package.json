@@ -30,9 +30,9 @@
     "dotenv": "^4.0.0",
     "github": "^9.2.0",
     "lodash": "^4.17.4",
-    "node-lambda": "^0.8.13",
+    "node-lambda": "^0.10.0",
     "rhyme": "0.0.3",
-    "sentence-tokenizer": "0.0.7",
+    "sentence-tokenizer": "0.0.8",
     "twit": "^2.2.5"
   }
 }
